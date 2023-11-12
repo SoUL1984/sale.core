@@ -1,0 +1,94 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["views"]
+  binaryTargets = ["native", "debian-openssl-1.1.x"]
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model user {
+  id Int @id @default(autoincrement())
+  email String @unique
+  password String
+  active Boolean? @default(true)
+  role UserRole @default(customer)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model item {
+  id Int @id @default(autoincrement())
+  catalog_id Int
+  name String
+  article String
+  price Decimal
+  hidden Boolean? @default(false)
+  catalog catalog @relation(fields: [catalog_id], references: [id])
+  item_characteristic item_characteristic[]  
+  order order[]
+}
+
+model catalog {
+  id Int @id @default(autoincrement())
+  name String @unique
+  hidden Boolean @default(false)
+  item item[]
+}
+
+model characteristic_key {
+  id Int @id @default(autoincrement())
+  name_key String
+  item_characteristic item_characteristic[]  
+}
+
+model characteristic_val {
+  id Int @id @default(autoincrement())
+  name_val String
+  item_characteristic item_characteristic[]
+}
+
+model item_characteristic {
+  id Int @id @default(autoincrement())
+  item_id Int
+  characteristic_key characteristic_key @relation(fields: [key_id], references: [id])
+  characteristic_val characteristic_val @relation(fields: [val_id], references: [id])
+  item item @relation(fields: [item_id], references: [id])
+  key_id Int
+  val_id Int
+}
+
+model order {
+  id Int @id @default(autoincrement())
+  item_id Int
+  item item @relation(fields: [item_id], references: [id])
+  user_id Int
+  delivery_address String
+  desc String
+  price Decimal
+  status OrderStatus @default(awaiting_payment)
+  create_at DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  completed_at DateTime
+}
+
+enum OrderStatus {
+  awaiting_payment
+  packaging
+  awaiting_dispatch
+  sent
+  received
+}
+
+enum UserRole {
+  customer
+  manager
+  courier
+  admin
+}
+
